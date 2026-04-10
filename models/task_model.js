@@ -29,6 +29,10 @@ const task=sequelize.define("task",{
     type: DataTypes.ENUM("low", "medium", "high"),
     defaultValue: "medium",
   },
+  isDeleted: {
+  type: DataTypes.BOOLEAN,
+  defaultValue: false
+},
 
   userId: {
     type: DataTypes.INTEGER,

@@ -77,8 +77,7 @@ const login= async(req,res)=>{
         }
         // Find user by email
         const existingUser = await user.findOne({ where: { email } });
-        console.log(existingUser)
-
+        
         if (!existingUser) {
             return res.status(404).json({
                 message: "User not found"
