@@ -8,6 +8,7 @@ require("dotenv").config()
 
 const secretKey=process.env.SECRET_KEY
 
+// Register logic
 const Register= async(req,res)=>{
     try {
         const {name,email,password}=req.body
