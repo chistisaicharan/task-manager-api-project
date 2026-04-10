@@ -11,10 +11,12 @@ const PORT=process.env.PORT
 require("./models/task_model")
 require("./models/user_model")
 
-const routes=require("./routes/auth.route")
+const routes=require("./routes/auth.route");
+const route1=require("./routes/task.route");
+
 
 app.use(routes)
-
+app.use(route1)
 sequelize.authenticate()
 .then(()=>console.log("DB is Connected Successfully"))
 .catch((err)=>console.log("DB Error",err))
