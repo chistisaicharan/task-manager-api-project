@@ -1,5 +1,7 @@
 
 const task=require("../models/task_model");
+
+const { Op, where,fn,col } = require("sequelize");
 //  createTask function
 const createTask=async(req,res)=>{
     try {
@@ -171,4 +173,55 @@ const taskFiltering=async(req,res)=>{
     }
 }
 
-module.exports={createTask,getTasks,updateTasks,deleteTask,taskFiltering}
+// search implementation
+
+const searchTask=async(req,res)=>{
+   
+    try {
+        const {search}=req.query
+        const userId=req.user.id
+        if(!search){
+            return res.status(400).json({
+                message:"search keyword is missing"
+            });
+        }
+        search = search.toLowerCase();
+        const findTaskBySearch=await task.findAll({
+            where:{
+                userId:userId,
+                isDeleted: false,
+                [Op.or]:[
+                    where(fn("LOWER",col("title")),{
+                        [Op.like]: `%${search}%`,
+                    }),
+                    where(fn("LOWER", col("description")), {
+                        [Op.like]: `%${search}%`,
+                    }),  
+                ],
+            },
+        });
+
+        if(findTaskBySearch.length==0){
+            return res.status(400).json({
+                message:"Task Not Found"
+            });
+        }
+        return res.status(200).json({
+            message:"search data",
+            data:findTaskBySearch
+        })
+    } catch (error) {
+        return res.status(500).json({
+            message:"internal server Error",
+            err:error.message
+        })
+    }
+}
+
+module.exports={createTask,
+    getTasks,
+    updateTasks,
+    deleteTask,
+    taskFiltering,
+    searchTask
+}
