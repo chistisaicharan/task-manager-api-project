@@ -27,6 +27,7 @@ const createTask=async(req,res)=>{
     }
 }
 
+// get all task
 
 const getTasks=async(req,res)=>{
     try {
@@ -130,4 +131,44 @@ try {
 
 }
 
-module.exports={createTask,getTasks,updateTasks}
+// filter by status and priority
+
+const taskFiltering=async(req,res)=>{
+    try {
+        const {status,priority}=req.query
+        const userId=req.user.id
+        
+        let whereCondition={
+            userId:userId,
+            isDeleted: false,
+        };
+        if(status){
+            whereCondition.status==status
+        }
+        if(priority){
+            whereCondition.priority==priority
+        }
+        // 4. Fetch filtered tasks from DB
+        const tasks = await task.findAll({
+            where: whereCondition,
+        });
+        if (tasks.length === 0) {
+            return res.status(404).json({
+            message: "No tasks found",
+            });
+        }
+
+    // 6. Send response
+        return res.status(200).json({
+            message: "Filtered tasks fetched successfully",
+            data: tasks,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message:"Interal Server Error",
+            err:error.message
+        })
+    }
+}
+
+module.exports={createTask,getTasks,updateTasks,deleteTask,taskFiltering}
