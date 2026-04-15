@@ -37,7 +37,7 @@ const getTasks=async(req,res)=>{
         const userId=req.user.id
 
         // 1. Query params
-        const {status,search,priority,page=1,limit=5}=req.query
+        let {status,search,priority,page=1,limit=5}=req.query
 
         // Base Condition
         let whereCondition ={
@@ -51,15 +51,15 @@ const getTasks=async(req,res)=>{
 
         // Calculate offset
 
-        let offSet=(page-1)*5
+        let offset = (page - 1) * limit;
 
          // 5. Filtering
         if(status){
-            whereCondition.status==status
+            whereCondition.status=status
         }
 
         if(priority){
-            whereCondition.priority==priority
+            whereCondition.priority=priority
         }
 
         // 6. Search (case-insensitive)

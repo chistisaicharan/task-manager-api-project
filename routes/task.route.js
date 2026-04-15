@@ -10,7 +10,7 @@ const authMiddleware=require("../middlewares/auth.middleware");
 
 routes.post("/createTask",authMiddleware,createTask)
 
-routes.get("/task",getTasks)
+routes.get("/task",authMiddleware,getTasks)
 
 routes.patch("/task/:id",authMiddleware,updateTasks)
 routes.delete("/delete/:id",authMiddleware,deleteTask)
