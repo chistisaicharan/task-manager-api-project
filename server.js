@@ -21,7 +21,7 @@ sequelize.authenticate()
 .then(()=>console.log("DB is Connected Successfully"))
 .catch((err)=>console.log("DB Error",err))
 
-sequelize.sync({alter:true})
+sequelize.sync({force: true})
 .then(()=>console.log("Table synced"))
 .catch((err)=>console.log("Table err",err))
 
