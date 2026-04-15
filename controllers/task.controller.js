@@ -33,18 +33,66 @@ const createTask=async(req,res)=>{
 
 const getTasks=async(req,res)=>{
     try {
-        // get all data from task
-        const taskData=await task.findAll()
-        // check data
-        if(!taskData){
-            return res.status(400).json({
-                message:"Data Not Found"
-            });
+        // req from user
+        const userId=req.user.id
+
+        // 1. Query params
+        const {status,search,priority,page=1,limit=5}=req.query
+
+        // Base Condition
+        let whereCondition ={
+            userId:userId,
+            isDeleted:false,
         }
+
+        // convert page & limit number
+        page=parseInt(page)
+        limit=parseInt(limit)
+
+        // Calculate offset
+
+        let offSet=(page-1)*5
+
+         // 5. Filtering
+        if(status){
+            whereCondition.status==status
+        }
+
+        if(priority){
+            whereCondition.priority==priority
+        }
+
+        // 6. Search (case-insensitive)
+        if(search){
+            search=search.toLowerCase()
+            whereCondition[Op.or]=[
+                where(fn("LOWER",col('title')),{
+                    [Op.like]:`%${search}%`
+                }),
+                where(fn("LOWER",col('description')),{
+                    [Op.like]:`%${search}%`
+                })
+            ]
+        }
+
+        // 7. Fetch data with pagination
+
+        const { count, rows } = await task.findAndCountAll({
+            where: whereCondition,
+            limit: limit,
+            offset: offSet,
+            order: [["createdAt", "DESC"]],
+        });
+
+         // 8. Response
         return res.status(200).json({
-            message:"Get All Data",
-            data:taskData
-        })
+        message: "Tasks fetched successfully",
+        totalTasks: count,
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        data: rows,
+    });
+
     } catch (error) {
         return res.status(500).json({
             message:"Internal Server Error",
@@ -133,95 +181,9 @@ try {
 
 }
 
-// filter by status and priority
-
-const taskFiltering=async(req,res)=>{
-    try {
-        const {status,priority}=req.query
-        const userId=req.user.id
-        
-        let whereCondition={
-            userId:userId,
-            isDeleted: false,
-        };
-        if(status){
-            whereCondition.status==status
-        }
-        if(priority){
-            whereCondition.priority==priority
-        }
-        // 4. Fetch filtered tasks from DB
-        const tasks = await task.findAll({
-            where: whereCondition,
-        });
-        if (tasks.length === 0) {
-            return res.status(404).json({
-            message: "No tasks found",
-            });
-        }
-
-    // 6. Send response
-        return res.status(200).json({
-            message: "Filtered tasks fetched successfully",
-            data: tasks,
-        });
-    } catch (error) {
-        return res.status(500).json({
-            message:"Interal Server Error",
-            err:error.message
-        })
-    }
-}
-
-// search implementation
-
-const searchTask=async(req,res)=>{
-   
-    try {
-        const {search}=req.query
-        const userId=req.user.id
-        if(!search){
-            return res.status(400).json({
-                message:"search keyword is missing"
-            });
-        }
-        search = search.toLowerCase();
-        const findTaskBySearch=await task.findAll({
-            where:{
-                userId:userId,
-                isDeleted: false,
-                [Op.or]:[
-                    where(fn("LOWER",col("title")),{
-                        [Op.like]: `%${search}%`,
-                    }),
-                    where(fn("LOWER", col("description")), {
-                        [Op.like]: `%${search}%`,
-                    }),  
-                ],
-            },
-        });
-
-        if(findTaskBySearch.length==0){
-            return res.status(400).json({
-                message:"Task Not Found"
-            });
-        }
-        return res.status(200).json({
-            message:"search data",
-            data:findTaskBySearch
-        })
-    } catch (error) {
-        return res.status(500).json({
-            message:"internal server Error",
-            err:error.message
-        })
-    }
-}
-
 module.exports={createTask,
     getTasks,
     updateTasks,
     deleteTask,
-    taskFiltering,
-    searchTask
+    
 }
